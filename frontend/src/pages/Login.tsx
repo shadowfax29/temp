@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Ticket } from "lucide-react";
 
@@ -13,6 +13,8 @@ const msg = (e: any) => e?.response?.data?.message || e?.message || "Something w
 /** Step 1: email and password. Step 2: the 6-digit code that was sent to the email. */
 export default function LoginPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const justReset = (location.state as { reset?: boolean } | null)?.reset === true;
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [challenge, setChallenge] = useState<Challenge | null>(null);
@@ -44,10 +46,12 @@ export default function LoginPage() {
                 {!challenge ? (
                     <form className="flex flex-col gap-4" onSubmit={(e) => { e.preventDefault(); void signIn(); }}>
                         <div><h1 className="text-xl font-bold">Sign in</h1><p className="text-sm text-ink-500">Use the email and password an admin gave you.</p></div>
+                        {justReset && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Password updated. Sign in with your new password.</p>}
                         <Input type="email" label="Email" labelPlacement="outside" value={email} onValueChange={setEmail} autoComplete="username" isRequired />
                         <Input type="password" label="Password" labelPlacement="outside" value={password} onValueChange={setPassword} autoComplete="current-password" isRequired />
                         {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
                         <Button type="submit" color="primary" isLoading={busy} isDisabled={!email || !password}>Continue</Button>
+                        <Link to="/forgot-password" className="text-center text-xs text-ink-500 hover:text-ink-800 dark:hover:text-ink-200">Forgot password?</Link>
                     </form>
                 ) : (
                     <div className="flex flex-col gap-4">

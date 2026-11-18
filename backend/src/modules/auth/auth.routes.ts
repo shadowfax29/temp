@@ -113,6 +113,39 @@ router.post('/change-password', authenticateAny, validate(z.object({ currentPass
   } catch (e) { next(e); }
 });
 
+router.post('/forgot-password', validate(z.object({ email: z.string().trim().email() })), async (req, res, next) => {
+  try {
+    const email = String(req.body.email).toLowerCase();
+    const [r] = await pool.query<Row[]>('SELECT UserID, UserName FROM Users WHERE UserEmail = ? AND UserStatus = 1 AND IsUserArchived = 0', [email]);
+    if (r[0]) {
+      const token = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+      await pool.query('INSERT INTO PasswordReset (user_id, token_hash, expires_at) VALUES (?, ?, NOW() + INTERVAL 1 HOUR)', [r[0]['UserID'], tokenHash]);
+      const link = `${env.FRONTEND_URL}/reset-password?token=${token}`;
+      await sendMail(email, 'Reset your Ticketing Tool password',
+        `Hello ${r[0]['UserName']},\n\nClick the link below to reset your password. It works for 1 hour.\n\n${link}\n\nIf you did not request this, ignore this email.`);
+    }
+    // Always respond OK — do not reveal whether the email exists
+    sendSuccess(res, { ok: true });
+  } catch (e) { next(e); }
+});
+
+router.post('/reset-password', validate(z.object({ token: z.string().min(1), newPassword: z.string().min(1).max(200) })), async (req, res, next) => {
+  try {
+    const tokenHash = crypto.createHash('sha256').update(String(req.body.token)).digest('hex');
+    const [r] = await pool.query<Row[]>(
+      `SELECT pr.id, pr.user_id, u.UserEmail, u.UserName, (pr.expires_at < NOW()) AS expired, pr.used_at
+       FROM PasswordReset pr JOIN Users u ON u.UserID = pr.user_id WHERE pr.token_hash = ?`, [tokenHash]);
+    const reset = r[0];
+    if (!reset || reset['used_at'] || Number(reset['expired'])) throw AppError.badRequest('This link has expired or already been used. Request a new one.');
+    checkNewPassword(req.body.newPassword, reset['UserEmail']);
+    await setPassword(Number(reset['user_id']), await hashPassword(req.body.newPassword), false);
+    await pool.query('UPDATE PasswordReset SET used_at = NOW() WHERE id = ?', [reset['id']]);
+    await logLogin(req, 'PASSWORD_CHANGED', String(reset['UserEmail']), Number(reset['user_id']), 'Password reset via email link');
+    sendSuccess(res, { ok: true });
+  } catch (e) { next(e); }
+});
+
 router.post('/logout', authenticateAny, async (req, res) => {
   await logLogin(req, 'LOGOUT', req.user!.email, Number(req.user!.sub));
   sendSuccess(res, { ok: true });

@@ -4,7 +4,9 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Layout from "@/components/Layout";
 import { getToken, getUser, hasModuleAccess, mustChangePassword } from "@/lib/auth";
 import ChangePasswordPage from "@/pages/ChangePassword";
+import ForgotPasswordPage from "@/pages/ForgotPassword";
 import LoginPage from "@/pages/Login";
+import ResetPasswordPage from "@/pages/ResetPassword";
 import TicketInboxPage from "@/pages/ticketing/Inbox";
 import TicketDetailPage from "@/pages/ticketing/TicketDetail";
 import TicketReportPage from "@/pages/ticketing/Report";
@@ -42,6 +44,8 @@ export default function App() {
     return (
         <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/change-password" element={getToken() ? <ChangePasswordPage /> : <Navigate to="/login" replace />} />
             <Route element={<RequireSignIn />}>
                 <Route path="/" element={<Home />} />
