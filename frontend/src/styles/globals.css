@@ -1,0 +1,109 @@
+@import "tailwindcss";
+
+/* Poppins is self-hosted via @fontsource/poppins (imported in main.tsx) */
+
+/* Tailwind configuration — TapMind design system tokens */
+@config "../../tailwind.config.js";
+
+@layer base {
+  html,
+  body {
+    @apply bg-ink-50 text-ink-900 antialiased;
+  }
+
+  html.dark,
+  html.dark body {
+    @apply bg-ink-950 text-white;
+  }
+
+  /* Native date/time pickers: without this the icon is black-on-black in dark mode */
+  input[type='date'],
+  input[type='time'],
+  input[type='datetime-local'] {
+    color-scheme: light;
+  }
+
+  html.dark input[type='date'],
+  html.dark input[type='time'],
+  html.dark input[type='datetime-local'] {
+    color-scheme: dark;
+  }
+
+  /* Table headers: uppercase, bold, tracked — applies to HeroUI and hand-built tables alike */
+  th {
+    @apply font-secondary font-medium uppercase tracking-wider text-[11px] text-ink-500 dark:text-ink-400;
+  }
+
+  /* Short values (names, dates, departments) stay on one line; tables scroll sideways instead.
+     Cells meant for long text opt back in with whitespace-normal. */
+  th,
+  td {
+    white-space: nowrap;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #c7cddb; border-radius: 8px; }
+  ::-webkit-scrollbar-thumb:hover { background: #a9b1c4; }
+  html.dark ::-webkit-scrollbar-thumb { background: #3a4050; }
+  html.dark ::-webkit-scrollbar-thumb:hover { background: #525c74; }
+}
+
+@layer components {
+  /* Applied to everything interactive */
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+      focus-visible:ring-offset-white dark:focus-visible:ring-offset-ink-950;
+  }
+
+  .input-base {
+    @apply h-10 w-full border border-ink-200 bg-white px-3 text-sm text-ink-900 placeholder:text-ink-400
+      transition-colors outline-none focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:ring-offset-2
+      focus-visible:ring-offset-white dark:border-white/10 dark:bg-ink-900 dark:text-white
+      dark:placeholder:text-ink-500 dark:focus:border-brand-500;
+  }
+
+  /* Form-field labels: small, uppercase, tracked (TapMind's monospace label, set in Poppins) */
+  .label-base {
+    @apply mb-1.5 block font-secondary text-[10.5px] font-medium uppercase tracking-label text-ink-500
+      dark:text-ink-400;
+  }
+
+  /* Small overline text above a heading */
+  .eyebrow {
+    @apply font-secondary text-[10.5px] font-medium uppercase tracking-eyebrow text-ink-500 dark:text-ink-400;
+  }
+}
+
+@layer utilities {
+  @keyframes slideUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    15% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    85% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    100% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+  }
+
+  .animate-slideUp {
+    animation: slideUp 3s ease-in-out forwards;
+  }
+}
+
+/* Hierarchy minimap and controls follow the theme */
+html.dark .react-flow__minimap { background: #141414; }
+html.dark .react-flow__minimap-mask { fill: rgba(0, 0, 0, 0.6); }
+html.dark .react-flow__controls-button { background: #141414; border-color: rgba(255, 255, 255, 0.1); color: #fff; fill: #fff; }

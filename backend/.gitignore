@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+uploads/
+
+# database dumps hold real people and tickets
+dump-*.sql
+*.dump.sql
