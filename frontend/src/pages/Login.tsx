@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Ticket } from "lucide-react";
+import { Eye, EyeOff, Ticket } from "lucide-react";
 
 import { Button, Input } from "@/components/ui";
 import OtpInput from "@/components/OtpInput";
@@ -19,6 +19,7 @@ export default function LoginPage() {
     const [password, setPassword] = useState("");
     const [challenge, setChallenge] = useState<Challenge | null>(null);
     const [code, setCode] = useState("");
+    const [showPw, setShowPw] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [busy, setBusy] = useState(false);
 
@@ -48,7 +49,20 @@ export default function LoginPage() {
                         <div><h1 className="text-xl font-bold">Sign in</h1><p className="text-sm text-ink-500">Use the email and password an admin gave you.</p></div>
                         {justReset && <p className="rounded bg-emerald-50 px-3 py-2 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Password updated. Sign in with your new password.</p>}
                         <Input type="email" label="Email" labelPlacement="outside" value={email} onValueChange={setEmail} autoComplete="username" isRequired />
-                        <Input type="password" label="Password" labelPlacement="outside" value={password} onValueChange={setPassword} autoComplete="current-password" isRequired />
+                        <Input
+                            type={showPw ? "text" : "password"}
+                            label="Password"
+                            labelPlacement="outside"
+                            value={password}
+                            onValueChange={setPassword}
+                            autoComplete="current-password"
+                            isRequired
+                            endContent={
+                                <button type="button" onClick={() => setShowPw((v) => !v)} className="text-ink-400 hover:text-ink-700 dark:hover:text-ink-200" tabIndex={-1} aria-label={showPw ? "Hide password" : "Show password"}>
+                                    {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                                </button>
+                            }
+                        />
                         {error && <p role="alert" className="text-sm text-rose-600">{error}</p>}
                         <Button type="submit" color="primary" isLoading={busy} isDisabled={!email || !password}>Continue</Button>
                         <Link to="/forgot-password" className="text-center text-xs text-ink-500 hover:text-ink-800 dark:hover:text-ink-200">Forgot password?</Link>
