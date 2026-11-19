@@ -44,11 +44,7 @@ const mask = (email: string) => email.replace(/^(.).*(@.*)$/, '$1***$2');
 router.post('/login', validate(z.object({ email: z.string().trim().email(), password: z.string().min(1).max(200) })), async (req, res, next) => {
   const email = String(req.body.email).toLowerCase();
   try {
-    if ((await recentFailures(email)) >= MAX_FAILURES) {
-      await logLogin(req, 'LOCKED', email, null, 'Too many wrong attempts');
-      throw new AppError('Too many wrong attempts. Try again in 15 minutes.', 429);
-    }
-    const [r] = await pool.query<Row[]>(
+const [r] = await pool.query<Row[]>(
       `SELECT u.UserID, u.UserName, u.UserEmail, u.PasswordHash, u.RoleID, u.TwoFactor, u.MustChangePassword FROM Users u JOIN AMRole ro ON ro.RoleID = u.RoleID
        WHERE u.UserEmail = ? AND u.UserStatus = 1 AND u.IsUserArchived = 0 AND ro.RoleStatus = 1`, [email]);
     const u = r[0];
@@ -83,7 +79,6 @@ router.post('/verify-otp', validate(z.object({ challengeId: z.string().uuid(), c
     const ch = c[0];
     if (!ch || ch['UsedAt'] || Number(ch['expired'])) throw AppError.unauthorized('That code has expired. Sign in again to get a new one.');
     const email = String(ch['UserEmail']).toLowerCase();
-    if (Number(ch['Attempts']) >= MAX_FAILURES) { await logLogin(req, 'LOCKED', email, ch['UserID'], 'Too many wrong codes'); throw AppError.unauthorized('Too many wrong codes. Sign in again to get a new one.'); }
     if (!(await bcrypt.compare(req.body.code, ch['CodeHash']))) {
       await pool.query('UPDATE LoginChallenge SET Attempts = Attempts + 1 WHERE ChallengeID = ?', [ch['ChallengeID']]);
       await logLogin(req, 'OTP_FAILED', email, ch['UserID'], 'Wrong code');
