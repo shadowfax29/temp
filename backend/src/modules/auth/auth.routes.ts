@@ -70,10 +70,8 @@ router.post('/login', validate(z.object({ email: z.string().trim().email(), pass
     await pool.query('INSERT INTO LoginChallenge (ChallengeID, UserID, CodeHash, ExpiresAt) VALUES (?,?,?, NOW() + INTERVAL ? MINUTE)', [challengeId, u['UserID'], await bcrypt.hash(code, 8), CODE_MINUTES]);
     const sent = await sendMail(email, 'Your sign-in code', `Your code is ${code}. It works for ${CODE_MINUTES} minutes. If this was not you, change your password.`);
     await logLogin(req, 'OTP_SENT', email, u['UserID'], sent ? 'Code emailed' : 'Code not emailed (no mail server set up)');
-    // Without a mail server the code is shown on screen in development only; in production the mail server is required.
-    const showCode = !sent && env.NODE_ENV !== 'production';
-    if (!sent && !showCode) throw AppError.internal('The sign-in code could not be sent. Ask an admin to set up the mail server.');
-    sendSuccess(res, { needsOtp: true, challengeId, emailHint: mask(email), expiresInMinutes: CODE_MINUTES, mailConfigured: mailConfigured(), ...(showCode ? { devOtp: code } : {}) });
+    // If mail is not configured the code is shown on screen so accounts without a real email (e.g. admin@ticketing.local) can still sign in.
+    sendSuccess(res, { needsOtp: true, challengeId, emailHint: mask(email), expiresInMinutes: CODE_MINUTES, mailConfigured: mailConfigured(), ...(!sent ? { devOtp: code } : {}) });
   } catch (e) { next(e); }
 });
 

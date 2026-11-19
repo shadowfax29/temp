@@ -74,7 +74,7 @@ export default function LoginPage() {
                         <OtpInput value={code} onChange={setCode} onComplete={verify} isInvalid={!!error} isDisabled={busy} />
                         {challenge.devOtp && (
                             <p className="border border-dashed border-amber-400 bg-amber-50 p-2 text-center text-xs text-amber-800 dark:bg-amber-500/10 dark:text-amber-300">
-                                Development only: no mail server is set up, so the code is shown here: <b className="tracking-widest">{challenge.devOtp}</b>
+                                No mail server configured — your sign-in code: <b className="tracking-widest">{challenge.devOtp}</b>
                             </p>
                         )}
                         {error && <p role="alert" className="text-center text-sm text-rose-600">{error}</p>}
