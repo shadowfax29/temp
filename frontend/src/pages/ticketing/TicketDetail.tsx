@@ -29,7 +29,7 @@ export default function TicketDetailPage() {
     const [pick, setPick] = useState<number | null>(null);
     const [step, setStep] = useState<Transition | null>(null);
     const [stepText, setStepText] = useState("");
-    const [tab, setTab] = useState<"conversation" | "history">("conversation");
+    const [tab, setTab] = useState<"conversation" | "history" | "time">("conversation");
     const [hist, setHist] = useState<History | null>(null);
 
     const load = useCallback(() => {
@@ -83,7 +83,7 @@ export default function TicketDetailPage() {
 
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
                 <div className="flex min-w-0 flex-col gap-4">
-                    {p.isAgent && <Segmented label="Ticket view" value={tab} onChange={setTab} options={[{ key: "conversation", label: "Conversation" }, { key: "history", label: "History" }]} />}
+                    {p.isAgent && <Segmented label="Ticket view" value={tab} onChange={setTab} options={[{ key: "conversation", label: "Conversation" }, { key: "history", label: "History" }, { key: "time", label: "Time & laps" }]} />}
 
                     {tab === "conversation" ? (
                         <>
@@ -129,14 +129,14 @@ export default function TicketDetailPage() {
                             )}
                             {t.status === "CLOSED" && <p className="text-sm text-ink-500">This ticket is closed. Raise a new ticket if you need more.</p>}
                         </>
-                    ) : (
+                    ) : tab === "history" ? (
                         <HistoryView hist={hist} />
+                    ) : (
+                        <TimerPanel t={t} />
                     )}
                 </div>
 
                 <aside className="flex flex-col gap-4">
-                    <TimerPanel t={t} />
-
                     <Panel title="Details">
                         <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-2.5 text-sm">
                             <dt className="text-ink-500">Assigner</dt><dd><b>{t.requester.name}</b><div className="text-xs text-ink-500">{t.requester.department ?? ""}{t.requester.manager ? ` · manager ${t.requester.manager}` : ""}</div></dd>
