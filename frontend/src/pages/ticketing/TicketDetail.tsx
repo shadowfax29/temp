@@ -132,11 +132,18 @@ export default function TicketDetailPage() {
                     ) : tab === "history" ? (
                         <HistoryView hist={hist} />
                     ) : (
-                        <TimerPanel t={t} />
+                        <LapsPanel t={t} />
                     )}
                 </div>
 
                 <aside className="flex flex-col gap-4">
+                    <Panel title="Time on this ticket">
+                        <div className="flex flex-col gap-1">
+                            <SixDigitTimer key={`${t.timer.totalSecs}-${t.timer.running}`} totalSecs={t.timer.totalSecs} running={t.timer.running} since={t.timer.since} />
+                            <p className="text-xs text-ink-500 dark:text-ink-400">{t.timer.note}</p>
+                        </div>
+                    </Panel>
+
                     <Panel title="Details">
                         <dl className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-2.5 text-sm">
                             <dt className="text-ink-500">Assigner</dt><dd><b>{t.requester.name}</b><div className="text-xs text-ink-500">{t.requester.department ?? ""}{t.requester.manager ? ` · manager ${t.requester.manager}` : ""}</div></dd>
@@ -269,6 +276,30 @@ function HistoryView({ hist }: { hist: History | null }) {
 }
 
 type Runner = (fn: () => Promise<TicketDetail>, done?: () => void) => Promise<void>;
+
+function LapsPanel({ t }: { t: TicketDetail }) {
+    const tm = t.timer;
+    if (!tm.laps.length) return <p className="text-sm text-ink-500">No laps recorded yet.</p>;
+    return (
+        <Panel title="Laps" flush>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                    <thead><tr className="border-b border-ink-200 bg-ink-50 dark:border-white/10 dark:bg-white/5">{["Lap", "Owner", "Ended by", "Time"].map((h) => <th key={h} className="px-4 py-2 text-left text-[11px] font-bold uppercase tracking-wide text-ink-500">{h}</th>)}</tr></thead>
+                    <tbody>
+                        {tm.laps.map((l) => (
+                            <tr key={l.n} className="border-b border-ink-100 last:border-0 dark:border-white/5">
+                                <td className="px-4 py-2.5">{l.n}</td>
+                                <td className="px-4 py-2.5">{l.owner}{l.team ? <span className="block text-xs text-ink-500">{l.team}</span> : null}</td>
+                                <td className="px-4 py-2.5">{l.running ? <span className="font-semibold text-brand-600">running</span> : l.endedBy ?? ""}</td>
+                                <td className="px-4 py-2.5 tabular-nums">{hms(l.secs)}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </Panel>
+    );
+}
 
 /** The consolidated time as six digits, and under it the laps: who held the ticket, and what ended each lap (the requester sees only the total) */
 function TimerPanel({ t }: { t: TicketDetail }) {
