@@ -107,8 +107,12 @@ router.post('/tickets/:key/assign', agent, validate(z.object({ userId: id.nullab
   h(async (req) => { await uvw.assign(String(req.params['key']), await actorOf(req), req.body.userId); return then(req); }));
 router.post('/tickets/:key/take', agent,
   h(async (req) => { await uvw.take(String(req.params['key']), await actorOf(req)); return then(req); }));
-router.post('/tickets/:key/transfer', agent, validate(z.object({ teamId: id, reason: text(500) })),
-  h(async (req) => { await uvw.transfer(String(req.params['key']), await actorOf(req), req.body.teamId, req.body.reason); return then(req); }));
+router.post('/tickets/:key/transfer', agent, validate(z.object({ teamId: id, reason: text(500), assigneeId: id.optional() })),
+  h(async (req) => {
+    await uvw.transfer(String(req.params['key']), await actorOf(req), req.body.teamId, req.body.reason);
+    if (req.body.assigneeId) await svc.assign(String(req.params['key']), await actorOf(req), req.body.assigneeId);
+    return then(req);
+  }));
 router.post('/tickets/:key/recategorize', agent,
   validate(z.object({ categoryId: z.coerce.number().int().optional(), subcategoryId: id, fields: z.record(z.unknown()).optional(), reason: text(500) })),
   h(async (req) => { await uvw.recategorize(String(req.params['key']), await actorOf(req), req.body); return then(req); }));
@@ -153,6 +157,7 @@ const Team = z.object({
 router.delete('/settings/teams/:id', writeTeams, h((req) => uvt.deleteTeam(Number(req.params['id']))));
 router.delete('/settings/subcategories/:sid', writeCat, h((req) => uvc.deleteCategory(Number(req.params['sid']))));
 router.get('/settings/teams', readTeams, h(() => uvt.listTeams()));
+router.get('/settings/teams/:id/members', agent, h((req) => svc.getTeamMembers(Number(req.params['id']))));
 router.post('/settings/teams', writeTeams, validate(Team), h((req) => uvt.saveTeam(req.body)));
 router.put('/settings/teams/:id', writeTeams, validate(Team), h((req) => uvt.saveTeam(req.body, Number(req.params['id']))));
 router.put('/settings/teams/:id/members', writeTeams,

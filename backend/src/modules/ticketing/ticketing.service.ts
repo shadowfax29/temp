@@ -406,6 +406,8 @@ export async function getTicket(key: string, userId: number, actor?: Actor) {
   };
 }
 
+export async function getTeamMembers(teamId: number) { return teamMembers(teamId); }
+
 async function teamMembers(teamId: number) {
   const [rows] = await pool.query<Row[]>(
     `SELECT m.user_id, m.privilege, u.UserName, tm.max_open,

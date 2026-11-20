@@ -152,7 +152,8 @@ export const ticketingApi = {
     assign: (key: string, userId: number | null) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/assign`, { userId })),
     take: (key: string) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/take`)),
     route: (key: string, teamId: number) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/route`, { teamId })),
-    transfer: (key: string, teamId: number, reason: string) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/transfer`, { teamId, reason })),
+    transfer: (key: string, teamId: number, reason: string, assigneeId?: number) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/transfer`, { teamId, reason, ...(assigneeId ? { assigneeId } : {}) })),
+    teamMembers: (teamId: number) => unwrap<{ userId: number; name: string; open: number; limit: number }[]>(axios.get(`${BASE}/settings/teams/${teamId}/members`)),
     recategorize: (key: string, body: { categoryId: number; subcategoryId: number; fields?: Record<string, string>; reason: string }) =>
         unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/recategorize`, body)),
     reopen: (key: string, reason?: string) => unwrap<TicketDetail>(axios.post(`${BASE}/tickets/${key}/reopen`, { reason })),

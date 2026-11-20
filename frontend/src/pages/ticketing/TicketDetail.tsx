@@ -314,17 +314,25 @@ function HandoffPanel({ t, busy, run, mode, setMode }: { t: TicketDetail; busy: 
     ];
     const [kind, setKind] = useState(kinds[0]?.key ?? "team");
     const [teamId, setTeamId] = useState<number | null>(null);
+    const [transferMemberId, setTransferMemberId] = useState<number | null>(null);
+    const [transferMembers, setTransferMembers] = useState<{ userId: number; name: string; open: number; limit: number }[]>([]);
     const [personId, setPersonId] = useState<number | null>(null);
     const [reason, setReason] = useState("");
     const [types, setTypes] = useState<Catalog["types"]>([]);
     const [subId, setSubId] = useState<number | null>(null);
     useEffect(() => { if (mode === "hand" && kind === "type" && !types.length) ticketingApi.catalog().then((c) => setTypes(c.types)).catch(() => undefined); }, [mode, kind, types.length]);
-    const done = () => { setMode(null); setReason(""); setTeamId(null); setPersonId(null); setSubId(null); };
+    useEffect(() => {
+        if (kind === "team" && teamId) {
+            setTransferMemberId(null);
+            ticketingApi.teamMembers(teamId).then(setTransferMembers).catch(() => setTransferMembers([]));
+        } else { setTransferMembers([]); setTransferMemberId(null); }
+    }, [kind, teamId]);
+    const done = () => { setMode(null); setReason(""); setTeamId(null); setPersonId(null); setSubId(null); setTransferMemberId(null); setTransferMembers([]); };
     const ok = reason.trim().length >= 3 && (kind === "team" ? !!teamId : kind === "person" ? !!personId : !!subId);
 
     const go = () => {
         const why = reason.trim();
-        if (kind === "team") return run(() => ticketingApi.transfer(t.key, teamId!, why), done);
+        if (kind === "team") return run(() => ticketingApi.transfer(t.key, teamId!, why, transferMemberId ?? undefined), done);
         if (kind === "type") return run(() => ticketingApi.recategorize(t.key, { categoryId: types.find((x) => x.id === subId)!.categoryId, subcategoryId: subId!, reason: why }), done);
         // another person of this team: assign, and keep the reason on the ticket as an internal note
         return run(async () => { await ticketingApi.assign(t.key, personId!); return ticketingApi.note(t.key, `Handed off: ${why}`); }, done);
@@ -343,9 +351,16 @@ function HandoffPanel({ t, busy, run, mode, setMode }: { t: TicketDetail; busy: 
                             {kinds.map((x) => <SelectItem key={x.key}>{x.label}</SelectItem>)}
                         </Select></Field>
                         {kind === "team" && (!t.transferTeams.length ? <p className="text-xs text-ink-500">No other team is available.</p> : (
-                            <Field label="Team"><Select aria-label="Team" placeholder="Choose a team" selectedKeys={teamId ? new Set([String(teamId)]) : new Set<string>()} onSelectionChange={(k) => setTeamId(Number(Array.from(k)[0]) || null)}>
-                                {t.transferTeams.map((x) => <SelectItem key={String(x.id)}>{x.name}</SelectItem>)}
-                            </Select></Field>
+                            <>
+                                <Field label="Team"><Select aria-label="Team" placeholder="Choose a team" selectedKeys={teamId ? new Set([String(teamId)]) : new Set<string>()} onSelectionChange={(k) => setTeamId(Number(Array.from(k)[0]) || null)}>
+                                    {t.transferTeams.map((x) => <SelectItem key={String(x.id)}>{x.name}</SelectItem>)}
+                                </Select></Field>
+                                {teamId && transferMembers.length > 0 && (
+                                    <Field label="Assign to (optional)"><Select aria-label="Assign to" placeholder="Choose a member" selectedKeys={transferMemberId ? new Set([String(transferMemberId)]) : new Set<string>()} onSelectionChange={(k) => setTransferMemberId(Number(Array.from(k)[0]) || null)}>
+                                        {transferMembers.map((m) => <SelectItem key={String(m.userId)} textValue={m.name}>{m.name} · {m.open}/{m.limit} open</SelectItem>)}
+                                    </Select></Field>
+                                )}
+                            </>
                         ))}
                         {kind === "person" && (
                             <Field label="Person"><Select aria-label="Person" placeholder="Choose a team member" selectedKeys={personId ? new Set([String(personId)]) : new Set<string>()} onSelectionChange={(k) => setPersonId(Number(Array.from(k)[0]) || null)}>
