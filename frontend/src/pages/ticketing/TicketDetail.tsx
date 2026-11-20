@@ -301,34 +301,7 @@ function LapsPanel({ t }: { t: TicketDetail }) {
     );
 }
 
-/** The consolidated time as six digits, and under it the laps: who held the ticket, and what ended each lap (the requester sees only the total) */
-function TimerPanel({ t }: { t: TicketDetail }) {
-    const tm = t.timer;
-    return (
-        <Panel title="Time on this ticket">
-            <div className="flex flex-col gap-3">
-                <SixDigitTimer key={`${tm.totalSecs}-${tm.running}`} totalSecs={tm.totalSecs} running={tm.running} since={tm.since} />
-                <p className="text-xs text-ink-500 dark:text-ink-400">{tm.note}</p>
-                {tm.laps.length > 0 && (
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[300px] text-xs">
-                            <thead><tr className="text-left uppercase tracking-wide text-ink-500"><th className="py-1 pr-2 font-semibold">Lap</th><th className="py-1 pr-2 font-semibold">Owner</th><th className="py-1 pr-2 font-semibold">Ended by</th><th className="py-1 text-right font-semibold">Time</th></tr></thead>
-                            <tbody>
-                                {tm.laps.map((l) => (
-                                    <tr key={l.n} className="border-t border-ink-100 align-top dark:border-white/5">
-                                        <td className="py-1.5 pr-2">{l.n}</td><td className="py-1.5 pr-2">{l.owner}{l.team ? <span className="block text-ink-500">{l.team}</span> : null}</td>
-                                        <td className="py-1.5 pr-2">{l.running ? <span className="font-semibold text-brand-600">running</span> : l.endedBy ?? ""}</td>
-                                        <td className="py-1.5 text-right tabular-nums">{hms(l.secs)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </Panel>
-    );
-}
+
 const hms = (s: number) => `${String(Math.floor(s / 3600)).padStart(2, "0")}:${String(Math.floor((s % 3600) / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
 /** Hand off: tick the box, then choose how (another team, another person of this team, or a different category) */
