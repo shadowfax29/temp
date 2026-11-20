@@ -318,6 +318,16 @@ export async function attachmentByLink(token: string) {
 }
 export { linkKind };
 
+export async function getTeamMembers(teamId: number) {
+  const [mm] = await pool.query<Row[]>(
+    `SELECT DISTINCT u.UserID, u.UserName, COALESCE(s.privilege, 'ASSOCIATE') AS privilege, COALESCE(ts.max_open, 8) AS max_open,
+       (SELECT COUNT(*) FROM uv_ticket x JOIN uv_ticket_status st ON st.id = x.status_id WHERE x.agent_id = u.UserID AND x.is_trashed = 0 AND st.code NOT IN ${DONE}) AS open_n
+     FROM uv_user_support_teams ut JOIN uv_user_instance i ON i.id = ut.userInstanceId JOIN Users u ON u.UserID = i.user_id
+     LEFT JOIN team_member_settings s ON s.team_id = ut.supportTeamId AND s.user_id = u.UserID LEFT JOIN team_settings ts ON ts.team_id = ut.supportTeamId
+     WHERE ut.supportTeamId = ? AND i.is_active = 1 AND u.UserStatus = 1 ORDER BY u.UserName`, [teamId]);
+  return mm.map((x) => ({ userId: x['UserID'] as number, name: x['UserName'] as string, privilege: x['privilege'] as string, open: Number(x['open_n']), limit: Number(x['max_open']) }));
+}
+
 // ── report ─────────────────────────────────────────────────────────────────────────
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;

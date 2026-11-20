@@ -157,7 +157,7 @@ const Team = z.object({
 router.delete('/settings/teams/:id', writeTeams, h((req) => uvt.deleteTeam(Number(req.params['id']))));
 router.delete('/settings/subcategories/:sid', writeCat, h((req) => uvc.deleteCategory(Number(req.params['sid']))));
 router.get('/settings/teams', readTeams, h(() => uvt.listTeams()));
-router.get('/settings/teams/:id/members', agent, h((req) => svc.getTeamMembers(Number(req.params['id']))));
+router.get('/settings/teams/:id/members', agent, h((req) => uv.getTeamMembers(Number(req.params['id']))));
 router.post('/settings/teams', writeTeams, validate(Team), h((req) => uvt.saveTeam(req.body)));
 router.put('/settings/teams/:id', writeTeams, validate(Team), h((req) => uvt.saveTeam(req.body, Number(req.params['id']))));
 router.put('/settings/teams/:id/members', writeTeams,
